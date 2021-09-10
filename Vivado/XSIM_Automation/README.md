@@ -19,8 +19,39 @@ To avoid to create the `.prj` manualy, we will export the simulation in Vivado.
 Fortunately, we get all the necessary files.
 
 #### Step 2:
+Copy the necessary files for the embedding in the exported xsim simulations folder 
 ```shell
 cp -r pyxsi/src  <exportet_xsim_dir>/py2xsim_lib
+```
+
+#### Step 3:
+Lead out of the top_tb the clock signals to get a control point. 
+Start to create multiple test runs with the python pytest library.
+An expamle is given in this tutorial folder.
+
+#### Step 4:
+Adjust the `<top_tb>.sh` in the `<exportet_xsim_dir>`
+Source Xilinx environment variables or add it to the bash script
+Extend the script with a new functions: `binding` and `simulate`
+
+```shell 
+# Source Xilinx environment variables - paste it at the top.
+source <path/to/your>/Xilinx/Vivado/20xx.x/settings64.sh
+
+# binding
+binding()
+{
+  g++ -fPIC -std=c++17 -I/usr/include/python3.8 -I<path/to/your>/Xilinx/Vivado/20xx.x/data/xsim/include -Isrc -c -o pybind.o py2xsim_lib/pybind.cpp
+  g++ -fPIC -std=c++17 -I/usr/include/python3.8 -I<path/to/your>/Xilinx/Vivado/20xx.x/data/xsim/include -Isrc -c -o xsi_loader.o py2xsim_lib/xsi_loader.cpp
+  g++ -fPIC -std=c++17 -I/usr/include/python3.8 -I<path/to/your>/Xilinx/Vivado/20xx.x/data/xsim/include -Isrc -shared -o pyxsi.so pybind.o xsi_loader.o -ldl
+}
+
+# start simulation, test are discovered and executed using Python's pytest environment
+simulate()
+{
+  LD_LIBRARY_PATH=<path/to/your>/Xilinx/Vivado/20xx.x/lib/lnx64.o python3.8 -m pytest <path/to>.py -v
+}
 
 ```
+Have fun with Python and Xsim!
 
